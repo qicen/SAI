@@ -55,6 +55,12 @@
 
 set -e
 
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+
+    echo "WARNING: this is not git repository, will skip structs check"
+    exit
+fi
+
 # 1. get all necessary data to temp directory for future processing
 # 2. pass all interesting commits to processor to build history
 
@@ -119,3 +125,4 @@ create_temp_dir
 create_commit_list $BEGIN_COMMIT $END_COMMIT
 checkout_inc_directories
 check_structs_history
+clean_temp_dir

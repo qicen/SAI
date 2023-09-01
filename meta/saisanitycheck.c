@@ -679,6 +679,8 @@ void check_attr_object_type_provided(
         case SAI_ATTR_VALUE_TYPE_SEGMENT_LIST:
         case SAI_ATTR_VALUE_TYPE_IP_ADDRESS_LIST:
         case SAI_ATTR_VALUE_TYPE_PORT_EYE_VALUES_LIST:
+        case SAI_ATTR_VALUE_TYPE_PORT_FREQUENCY_OFFSET_PPM_LIST:
+        case SAI_ATTR_VALUE_TYPE_PORT_SNR_LIST:
         case SAI_ATTR_VALUE_TYPE_LATCH_STATUS:
         case SAI_ATTR_VALUE_TYPE_PORT_LANE_LATCH_STATUS_LIST:
         case SAI_ATTR_VALUE_TYPE_TIMESPEC:
@@ -982,6 +984,8 @@ void check_attr_default_required(
         case SAI_ATTR_VALUE_TYPE_MAP_LIST:
         case SAI_ATTR_VALUE_TYPE_IP_ADDRESS_LIST:
         case SAI_ATTR_VALUE_TYPE_PORT_EYE_VALUES_LIST:
+        case SAI_ATTR_VALUE_TYPE_PORT_FREQUENCY_OFFSET_PPM_LIST:
+        case SAI_ATTR_VALUE_TYPE_PORT_SNR_LIST:
         case SAI_ATTR_VALUE_TYPE_PORT_LANE_LATCH_STATUS_LIST:
         case SAI_ATTR_VALUE_TYPE_SYSTEM_PORT_CONFIG_LIST:
         case SAI_ATTR_VALUE_TYPE_IP_PREFIX_LIST:
@@ -1192,6 +1196,8 @@ void check_attr_default_value_type(
                 case SAI_ATTR_VALUE_TYPE_MAP_LIST:
                 case SAI_ATTR_VALUE_TYPE_IP_ADDRESS_LIST:
                 case SAI_ATTR_VALUE_TYPE_PORT_EYE_VALUES_LIST:
+                case SAI_ATTR_VALUE_TYPE_PORT_FREQUENCY_OFFSET_PPM_LIST:
+                case SAI_ATTR_VALUE_TYPE_PORT_SNR_LIST:
                 case SAI_ATTR_VALUE_TYPE_PORT_LANE_LATCH_STATUS_LIST:
                 case SAI_ATTR_VALUE_TYPE_SYSTEM_PORT_CONFIG_LIST:
                 case SAI_ATTR_VALUE_TYPE_IP_PREFIX_LIST:
@@ -1645,6 +1651,16 @@ void check_attr_validonly(
                  * MPLS out segment attributes are required for ingress node and valid only for MPLS next hop.
                  */
             }
+            else if (md->objecttype == SAI_OBJECT_TYPE_TWAMP_SESSION &&
+                    (md->attrid == SAI_TWAMP_SESSION_ATTR_TX_PKT_CNT || md->attrid == SAI_TWAMP_SESSION_ATTR_TX_PKT_PERIOD ||
+                     md->attrid == SAI_TWAMP_SESSION_ATTR_TUNNEL_OUTER_VLAN_ID || md->attrid == SAI_TWAMP_SESSION_ATTR_TUNNEL_OUTER_VLAN_PRI ||
+                     md->attrid == SAI_TWAMP_SESSION_ATTR_TUNNEL_OUTER_VLAN_CFI || md->attrid == SAI_TWAMP_SESSION_ATTR_VLAN_ID ||
+                     md->attrid == SAI_TWAMP_SESSION_ATTR_VLAN_PRI || md->attrid == SAI_TWAMP_SESSION_ATTR_VLAN_CFI))
+            {
+                /*
+                 * TWAMP packet tx mode attributes are depending on TWAMP_PKT_TX_MODE.
+                 */
+            }
             else
             {
                 META_MD_ASSERT_FAIL(md, "validonly attribute is also validonly attribute, not allowed");
@@ -1795,6 +1811,8 @@ void check_attr_allow_flags(
             case SAI_ATTR_VALUE_TYPE_SEGMENT_LIST:
             case SAI_ATTR_VALUE_TYPE_IP_ADDRESS_LIST:
             case SAI_ATTR_VALUE_TYPE_PORT_EYE_VALUES_LIST:
+            case SAI_ATTR_VALUE_TYPE_PORT_FREQUENCY_OFFSET_PPM_LIST:
+            case SAI_ATTR_VALUE_TYPE_PORT_SNR_LIST:
             case SAI_ATTR_VALUE_TYPE_PORT_LANE_LATCH_STATUS_LIST:
             case SAI_ATTR_VALUE_TYPE_ACL_FIELD_DATA_UINT8_LIST:
             case SAI_ATTR_VALUE_TYPE_SYSTEM_PORT_CONFIG_LIST:
@@ -2662,6 +2680,8 @@ void check_attr_is_primitive(
         case SAI_ATTR_VALUE_TYPE_SEGMENT_LIST:
         case SAI_ATTR_VALUE_TYPE_IP_ADDRESS_LIST:
         case SAI_ATTR_VALUE_TYPE_PORT_EYE_VALUES_LIST:
+        case SAI_ATTR_VALUE_TYPE_PORT_FREQUENCY_OFFSET_PPM_LIST:
+        case SAI_ATTR_VALUE_TYPE_PORT_SNR_LIST:
         case SAI_ATTR_VALUE_TYPE_SYSTEM_PORT_CONFIG_LIST:
         case SAI_ATTR_VALUE_TYPE_PORT_ERR_STATUS_LIST:
         case SAI_ATTR_VALUE_TYPE_UINT16_RANGE_LIST:
@@ -4784,7 +4804,8 @@ void check_object_ro_list(
             oi->objecttype == SAI_OBJECT_TYPE_DTEL ||
             oi->objecttype == SAI_OBJECT_TYPE_DTEL_QUEUE_REPORT ||
             oi->objecttype == SAI_OBJECT_TYPE_DTEL_EVENT ||
-            oi->objecttype == SAI_OBJECT_TYPE_GENERIC_PROGRAMMABLE)
+            oi->objecttype == SAI_OBJECT_TYPE_GENERIC_PROGRAMMABLE ||
+            oi->objecttype == SAI_OBJECT_TYPE_TWAMP_SESSION)
     {
         /*
          * We skip hostif table entry since there is no 1 object which can
@@ -5582,6 +5603,10 @@ void check_struct_and_union_size()
     CHECK_STRUCT_SIZE(sai_port_lane_eye_values_t, 20);
     CHECK_STRUCT_SIZE(sai_port_lane_latch_status_list_t, 16);
     CHECK_STRUCT_SIZE(sai_port_lane_latch_status_t, 8);
+    CHECK_STRUCT_SIZE(sai_port_frequency_offset_ppm_list_t, 16);
+    CHECK_STRUCT_SIZE(sai_port_frequency_offset_ppm_values_t, 8);
+    CHECK_STRUCT_SIZE(sai_port_snr_list_t, 16);
+    CHECK_STRUCT_SIZE(sai_port_snr_values_t, 8);
     CHECK_STRUCT_SIZE(sai_port_oper_status_notification_t, 16);
     CHECK_STRUCT_SIZE(sai_prbs_rx_state_t, 8);
     CHECK_STRUCT_SIZE(sai_qos_map_list_t, 16);
@@ -5611,6 +5636,17 @@ void check_struct_and_union_size()
     CHECK_STRUCT_SIZE(sai_vlan_list_t, 16);
 }
 #pragma GCC diagnostic pop
+
+#define _ENTRY(X,x) META_LOG_DEBUG("%s: %d, %s: %zu", #X, SAI_OBJECT_TYPE_ ## X, # x, sizeof(sai_ ## x ## _t));
+#define _BULK_ENTRY(X,x) META_LOG_DEBUG("%s: %d, %s: %zu", #X, SAI_OBJECT_TYPE_ ## X, # x, sizeof(sai_ ## x ## _t));
+
+void check_declare_entry_macro()
+{
+    SAI_META_LOG_ENTER();
+
+    SAI_METADATA_DECLARE_EVERY_ENTRY(_ENTRY);
+    SAI_METADATA_DECLARE_EVERY_BULK_ENTRY(_BULK_ENTRY);
+}
 
 int main(int argc, char **argv)
 {
@@ -5657,6 +5693,7 @@ int main(int argc, char **argv)
     check_object_type_extension_max_value();
     check_global_apis();
     check_struct_and_union_size();
+    check_declare_entry_macro();
 
     SAI_META_LOG_DEBUG("log test");
 

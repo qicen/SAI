@@ -293,6 +293,7 @@ typedef enum _sai_object_type_t
     SAI_OBJECT_TYPE_ARS_PROFILE              = 103,
     SAI_OBJECT_TYPE_ARS                      = 104,
     SAI_OBJECT_TYPE_ACL_TABLE_CHAIN_GROUP    = 105,
+    SAI_OBJECT_TYPE_TWAMP_SESSION            = 106,
     SAI_OBJECT_TYPE_MAX,  /* Must remain in last position */
 } sai_object_type_t;
 
@@ -1148,6 +1149,45 @@ typedef struct _sai_port_eye_values_list_t
 } sai_port_eye_values_list_t;
 
 /**
+ * @brief Defines a lane with its frequency offset ppm
+ */
+typedef struct _sai_port_frequency_offset_ppm_values_t
+{
+    uint32_t lane;
+    sai_int16_t ppm;
+} sai_port_frequency_offset_ppm_values_t;
+
+/**
+ * @brief Defines a port's lanes frequency offset ppm list
+ */
+typedef struct _sai_port_frequency_offset_ppm_list_t
+{
+    uint32_t count;
+    sai_port_frequency_offset_ppm_values_t *list;
+} sai_port_frequency_offset_ppm_list_t;
+
+/**
+ * @brief Defines a lane with its SNR
+ *
+ * Each SNR value is encoded as U16 in units of 1/256 dB.
+ * For example, a value of 5248 represents a SNR of 20.5 dB
+ */
+typedef struct _sai_port_snr_values_t
+{
+    uint32_t lane;
+    sai_uint16_t snr;
+} sai_port_snr_values_t;
+
+/**
+ * @brief Defines a port's lanes SNR list
+ */
+typedef struct _sai_port_snr_list_t
+{
+    uint32_t count;
+    sai_port_snr_values_t *list;
+} sai_port_snr_list_t;
+
+/**
  * @brief Enum defining MPLS out segment type
  */
 typedef enum _sai_outseg_type_t
@@ -1473,6 +1513,12 @@ typedef union _sai_attribute_value_t
 
     /** @validonly meta->attrvaluetype == SAI_ATTR_VALUE_TYPE_ACL_CHAIN_LIST */
     sai_acl_chain_list_t aclchainlist;
+
+    /** @validonly meta->attrvaluetype == SAI_ATTR_VALUE_TYPE_PORT_FREQUENCY_OFFSET_PPM_LIST */
+    sai_port_frequency_offset_ppm_list_t portfrequencyoffsetppmlist;
+
+    /** @validonly meta->attrvaluetype == SAI_ATTR_VALUE_TYPE_PORT_SNR_LIST */
+    sai_port_snr_list_t portsnrlist;
 } sai_attribute_value_t;
 
 /**
